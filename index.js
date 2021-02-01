@@ -7,12 +7,8 @@ app.use(express.urlencoded()); //Parse URL-encoded bodies
 app.get("/report", (req, res) => {
 	console.log("---- inbound at " + new Date() + " ----");
 	console.log(req.query);
-	console.log(req.body);
+	console.log(req);
 	res.send("OK");
-});
-
-app.get('/hello', function(req, res){
-  res.send('Hello World');
 });
 
 

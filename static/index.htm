@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title></title>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+<link rel="preconnect" href="https://fonts.gstatic.com">
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400&display=swap" rel="stylesheet">
+
+<style type="text/css">
+	body { background:#000000; overflow: hidden; font-family: 'Open Sans', sans-serif; }
+
+
+@keyframes gradient {
+	0% {
+		background-position: 0% 50%;
+	}
+	50% {
+		background-position: 100% 50%;
+	}
+	100% {
+		background-position: 0% 50%;
+	}
+}
+
+
+	.stage { position: absolute;top:0px; left:0px; right:0px; bottom:0px; opacity:0; transform: scale(1.2); transition-duration: 1000ms; }
+	.stage.visible { opacity:1; transform:scale(1); }
+	#bg { position: absolute; top:0px; left:0px; bottom: 0px; right:0px; opacity: 1; transform: scale(1.2); transition-duration: 1000ms; 
+
+		background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+		background-size: 400% 400%;
+		animation: gradient 15s ease infinite;
+	}
+	#bg.fadeOut { transform: scale(1); opacity:0.2; }
+
+	.timescreensaver { position: absolute; top:50%; left:50%; transform:translate(-50%, -50%); transition-duration: 1000ms; transform-origin: center center; pointer-events: none;transition-delay: 0ms; }
+	.timescreensaver.fadeOut { transform: translate(-50%, -50%) scale(1.3); opacity:0; transition-delay: 0ms; transition-duration: 300ms; }
+
+	.timescreensaver .time { color:white; font-size: 160px; font-weight:300; text-align: center; opacity:0.6; }
+	.timescreensaver .temp { font-size:80px; font-weight: 300; color:white; text-align: center; opacity:0.6; border-top:1px solid rgba(255,255,255,0.2); width:80%; margin:0px auto; padding-top:10px;}
+
+	.blendedcanvas { position: absolute;top:0px; left:0px; }
+</style>
+</head>
+<body>
+
+<div class="stage">
+	<div id="bg" class="fadeOut"></div>
+	<div class="timescreensaver">
+		<div class="time"></div>
+		<div class="temp"></div>
+		
+	</div>
+</div>
+
+<script type="text/javascript">
+	var timeElem = document.querySelector(".timescreensaver .time");
+	var tempElem = document.querySelector(".timescreensaver .temp");
+	var screensaverElem = document.querySelector(".timescreensaver");
+	var bg = document.querySelector("#bg");
+	var stage = document.querySelector(".stage");
+
+	
+	setInterval(function(){
+		timeElem.innerHTML = moment().format("HH:mm:ss");
+		tempElem.innerHTML = "19.5&deg;"
+	},1000 / 30);
+
+
+
+	var displayShowing = false;
+
+	function showDisplay(){
+		if (!displayShowing){
+			stage.classList.add("visible");
+			//bg.classList.remove("fadeOut");
+			//screensaverElem.classList.add("fadeOut");
+		}
+	}
+
+
+	function hideDisplay(){
+		stage.classList.remove("visible");
+		//bg.classList.add("fadeOut");
+		//screensaverElem.classList.remove("fadeOut");
+	}
+
+
+	window.addEventListener("message", (event) => {
+		if (event.data === "user_nearby"){
+			showDisplay();
+		} else if (event.data === "user_away"){
+			hideDisplay();
+		}
+	}, false);
+
+</script>
+
+
+</body>
+</html>

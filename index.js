@@ -11,6 +11,11 @@ app.get("/report/:type/:deviceId", (req, res) => {
 	res.send("OK");
 });
 
+app.all("/report", (req,res) => {
+	console.log(req.query);
+	res.send("OK");
+});
+
 
 app.get("/", (req, res) => {
 	res.sendFile(__dirname + "/static/app.htm");

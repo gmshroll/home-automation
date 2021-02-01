@@ -4,10 +4,10 @@ const path = require("path");
 
 app.use(express.urlencoded()); //Parse URL-encoded bodies
 
-app.get("/report", (req, res) => {
+app.get("/report/:type/:deviceId", (req, res) => {
 	console.log("---- inbound at " + new Date() + " ----");
 	console.log(req.query);
-	console.log(req);
+	console.log(req.params);
 	res.send("OK");
 });
 

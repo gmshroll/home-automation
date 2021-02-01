@@ -11,11 +11,12 @@ app.get("/", (req, res) => {
 
 app.use("/", express.static('static'));
 
-app.all("/report", function(){
+app.all("/report", function(req, res){
 	console.log("---- inbound at " + new Date() + " ----");
 	console.log(req.query);
 	console.log(req.body);
-})
+	res.send("OK");
+});
 
 console.log(":3020");
 app.listen(3020);

@@ -23,5 +23,12 @@ app.get("/", (req, res) => {
 
 app.use("/", express.static('static'));
 
+app.use(function(req, res, next){
+	console.log("---- 404 at " + new Date() + " ----");
+	console.log(req.query);
+	console.log(req);
+	res.send("404");
+});
+
 console.log(":3020");
 app.listen(3020);

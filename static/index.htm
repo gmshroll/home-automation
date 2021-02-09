@@ -5,23 +5,24 @@
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 <link rel="preconnect" href="https://fonts.gstatic.com">
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400&display=swap" rel="stylesheet">
+<script type="text/javascript" src="/modules/jquery/dist/jquery.min.js"></script>
+<script src="/socket.io/socket.io.js"></script>
 
 <style type="text/css">
 	body { background:#000000; overflow: hidden; font-family: 'Open Sans', sans-serif; }
 
 
-@keyframes gradient {
-	0% {
-		background-position: 0% 50%;
+	@keyframes gradient {
+		0% {
+			background-position: 0% 50%;
+		}
+		50% {
+			background-position: 100% 50%;
+		}
+		100% {
+			background-position: 0% 50%;
+		}
 	}
-	50% {
-		background-position: 100% 50%;
-	}
-	100% {
-		background-position: 0% 50%;
-	}
-}
-
 
 	.stage { position: absolute;top:0px; left:0px; right:0px; bottom:0px; opacity:0; transform: scale(1.2); transition-duration: 1000ms; }
 	.stage.visible { opacity:1; transform:scale(1); }
@@ -40,6 +41,9 @@
 	.timescreensaver .temp { font-size:80px; font-weight: 300; color:white; text-align: center; opacity:0.6; border-top:1px solid rgba(255,255,255,0.2); width:80%; margin:0px auto; padding-top:10px;}
 
 	.blendedcanvas { position: absolute;top:0px; left:0px; }
+
+	.video { position: absolute; top:10px; right:10px; width:1024px; height:720px; }
+	.video video { width:100%; height:100%; }
 </style>
 </head>
 <body>
@@ -53,6 +57,10 @@
 	</div>
 </div>
 
+<div class="video">
+	<video poster="camera.png" src="/camera/feed" autoplay=1 id="camfeed"></video>
+</div>
+
 <script type="text/javascript">
 	var timeElem = document.querySelector(".timescreensaver .time");
 	var tempElem = document.querySelector(".timescreensaver .temp");
@@ -60,13 +68,18 @@
 	var bg = document.querySelector("#bg");
 	var stage = document.querySelector(".stage");
 
-	
+	var temperature = 0;
+
 	setInterval(function(){
 		timeElem.innerHTML = moment().format("HH:mm:ss");
-		tempElem.innerHTML = "19.5&deg;"
+		tempElem.innerHTML = temperature + "&deg;"
 	},1000 / 30);
 
-
+	setTimeout(function(){
+		var camfeed = document.getElementById("camfeed");
+		camfeed.pause();
+		camfeed.src = "";
+	},30000);
 
 	var displayShowing = false;
 
@@ -94,6 +107,17 @@
 		}
 	}, false);
 
+
+	var socket = io.connect('http://192.168.1.198:3020');
+		socket.on('connect', function(data) {
+		socket.emit('join', 'Hello World from client');
+	});
+
+	function getTemp(){
+		socket.emit("getTemperature", "", function(data){
+			temperature = data.temperature;
+		});
+	}
 </script>
 
 

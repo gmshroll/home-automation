@@ -33,7 +33,6 @@ function Temperature(){
 					const file = __dirname + '/iot/' + files[i];
 					let thisDevice = await new Promise((r, reject) => {
 						fs.readFile(file, 'utf8', (err, data) => {
-							console.log(file);
 							let json;
 							try {
 								json = JSON.parse(data);
@@ -78,7 +77,7 @@ function Temperature(){
 			averageC += temps[i].temperature; 
 		}
 		self.average = averageC / temps.length;
-	},1000 * 10);
+	},1000 * 60);
 }
 
 

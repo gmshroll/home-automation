@@ -199,6 +199,7 @@ app.get("/report/:type/:deviceId", async(req, res) => {
 
 	// get information about this device by calling its /status endpoint
 	const status = await new Promise((r) => {
+		console.log("fetching status from " + "http://" + ip + "/status")
 		fetch("http://" + ip + "/status", {
 			method: "GET"
 		}).then(res => res.json()).then(json => r(json));

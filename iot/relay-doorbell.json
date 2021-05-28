@@ -1,0 +1,1 @@
+{"type":"relay","deviceId":"doorbell","switchActions":{"0":[{"actionType":"cctvDialog","camera":"frontdoor"}]},"_updated":1617374214382,"log":[],"switchState":{"0":true}}

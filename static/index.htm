@@ -37,13 +37,72 @@
 	.timescreensaver { position: absolute; top:50%; left:50%; transform:translate(-50%, -50%); transition-duration: 1000ms; transform-origin: center center; pointer-events: none;transition-delay: 0ms; }
 	.timescreensaver.fadeOut { transform: translate(-50%, -50%) scale(1.3); opacity:0; transition-delay: 0ms; transition-duration: 300ms; }
 
-	.timescreensaver .time { color:white; font-size: 160px; font-weight:300; text-align: center; opacity:0.6; }
-	.timescreensaver .temp { font-size:80px; font-weight: 300; color:white; text-align: center; opacity:0.6; border-top:1px solid rgba(255,255,255,0.2); width:80%; margin:0px auto; padding-top:10px;}
+	.timescreensaver .time { color:white; font-size: 160px; font-weight:300; text-align: center; opacity:0.6; user-select: none;}
+	.timescreensaver .temp { font-size:80px; font-weight: 300; color:white; text-align: center; opacity:0.6; user-select:none; border-top:1px solid rgba(255,255,255,0.2); width:80%; margin:0px auto; padding-top:10px;}
 
 	.blendedcanvas { position: absolute;top:0px; left:0px; }
 
-	.video { position: absolute; top:10px; right:10px; width:1024px; height:720px; }
-	.video video { width:100%; height:100%; }
+
+	.cctvDialog { 
+		position: absolute;  top:50%; left:50%; transform:translate(-50%, -50%); opacity: 0; background:black; border-radius:3px; 
+		-webkit-box-shadow: 0px 0px 20px 0px rgba(0,0,0,0.49);
+		-moz-box-shadow: 0px 0px 20px 0px rgba(0,0,0,0.49);
+		box-shadow: 0px 0px 20px 0px rgba(0,0,0,0.49);
+	 }
+	 .cctvDialog.visible { transform:translate(-50%, -50%); opacity: 1; animation: cctvDialog ease-in forwards 300ms; }
+	@keyframes cctvDialog {
+		0% {
+			opacity: 0;
+			transform: translate(-50%, -50%) scale(0.8);
+		},
+		100% {
+			opacity: 1;
+			transform: translate(-50%, -50%) scale(1);
+		}
+	} 
+	 .cctvDialog video { width:1024px; font-size: 0; display:block; }
+
+
+	.loading {
+		opacity:0; pointer-events: none; user-select: none; transition-duration: 200ms; position: absolute;
+		width: 150px; height:150px; background: black; border-radius: 5px; left:50%; top:50%; transform: translate(-50%, -50%) scale(0.8);
+		-webkit-box-shadow: 0px 0px 20px 0px rgba(0,0,0,0.49);
+		-moz-box-shadow: 0px 0px 20px 0px rgba(0,0,0,0.49);
+		box-shadow: 0px 0px 20px 0px rgba(0,0,0,0.49);
+	}
+	.loading.visible { 
+		transform: translate(-50%, -50%) scale(1); opacity: 0.8;
+	}
+
+	.lds-dual-ring {
+		display: block;
+		width: 95px;
+		height: 95px;
+		position: absolute;
+		left:50%; 
+		top:50%;
+		transform: translate(-50%, -50%);
+	}
+	.lds-dual-ring:after {
+		content: " ";
+		display: block;
+		width: 64px;
+		height: 64px;
+		margin: 8px;
+		border-radius: 50%;
+		border: 6px solid #fff;
+		border-color: #fff transparent #fff transparent;
+		animation: lds-dual-ring 1.2s linear infinite;
+	}
+	@keyframes lds-dual-ring {
+		0% {
+			transform: rotate(0deg);
+		}
+		100% {
+			transform: rotate(360deg);
+		}
+	}
+
 </style>
 </head>
 <body>
@@ -53,13 +112,19 @@
 	<div class="timescreensaver">
 		<div class="time"></div>
 		<div class="temp"></div>
-		
+	</div>
+
+	<div class="mainui">
+
+	</div>
+
+	<div class="cctvDialog"></div>
+
+	<div class="loading">
+		<div class="lds-dual-ring"></div>
 	</div>
 </div>
 
-<div class="video">
-	<video poster="camera.png" src="/camera/feed" autoplay=1 id="camfeed"></video>
-</div>
 
 <script type="text/javascript">
 	var timeElem = document.querySelector(".timescreensaver .time");
@@ -67,22 +132,151 @@
 	var screensaverElem = document.querySelector(".timescreensaver");
 	var bg = document.querySelector("#bg");
 	var stage = document.querySelector(".stage");
+	var loadingElem = document.querySelector(".loading");
 
 	var temperature = 0;
+	var cctvDialogShowing = false;
+
+	showDisplay();
+	cctvDialogInit();
 
 	setInterval(function(){
 		timeElem.innerHTML = moment().format("HH:mm:ss");
 		tempElem.innerHTML = temperature + "&deg;"
 	},1000 / 30);
 
-	setTimeout(function(){
-		var camfeed = document.getElementById("camfeed");
-		camfeed.pause();
-		camfeed.src = "";
-	},30000);
+	// initialise  touch events on the cctv dialog
+	function cctvDialogInit(){
+		var cctvDialog = document.querySelector(".cctvDialog");
+		cctvDialog.addEventListener('touchstart', process_touchstart, false);
+		cctvDialog.addEventListener('touchmove', process_touchmove, false);
+		cctvDialog.addEventListener('touchend', process_touchend, false);
+
+		var touchpositions = {};
+		var touching = false;
+
+		function process_touchstart(e){
+			touchpositions = e.touches['0'];
+			touching = true;
+		}
+
+		function process_touchmove(e){
+			e.preventDefault();
+			
+			var previousXOffset = touchpositions.xOffset || 0;
+			var previousYOffset = touchpositions.yOffset || 0;
+
+			// drag under finger
+			touchpositions.xOffset = (e.touches['0'].pageX - touchpositions.clientX);
+			cctvDialog.style.marginLeft = (touchpositions.xOffset) + "px";
+
+			touchpositions.yOffset = (e.touches['0'].pageY - touchpositions.clientY);
+			cctvDialog.style.marginTop = (touchpositions.yOffset) + "px";
+
+			touchpositions.xSpeed = touchpositions.xOffset - previousXOffset;
+			touchpositions.ySpeed = touchpositions.yOffset - previousYOffset;
+
+			touchpositions.latestXSpeed = touchpositions.xSpeed;
+			touchpositions.latestYSpeed = touchpositions.ySpeed;
+		}
+
+		function process_touchend(){
+			touching = false;
+		}
+
+		window.requestAnimationFrame(render);
+		function render(){
+			if (typeof(touchpositions.xOffset) !== "undefined"){
+				if (touching === false && cctvDialogShowing === true){
+					touchpositions.xOffset = touchpositions.xOffset + touchpositions.xSpeed;
+					touchpositions.yOffset = touchpositions.yOffset + touchpositions.ySpeed;
+
+					cctvDialog.style.marginLeft = (touchpositions.xOffset) + "px";
+					cctvDialog.style.marginTop = (touchpositions.yOffset) + "px";
+
+			
+					touchpositions.xSpeed = touchpositions.xSpeed * 0.8;
+					touchpositions.ySpeed = touchpositions.ySpeed * 0.8;
+				}
+
+				if (Math.abs(touchpositions.xOffset) > 200 || Math.abs(touchpositions.yOffset) > 200){
+					touchpositions = {};
+					cctvDialogDismiss();
+				}
+			}
+			window.requestAnimationFrame(render);
+		}
+	}
+
+	// show the cctv dialog
+	var camdialogDimissTimeout;
+	function cctvDialogShow(cam){
+		// timeout and automatically dismiss
+		if (cam.timeout){
+			clearTimeout(camdialogDimissTimeout);
+			camdialogDimissTimeout = setTimeout(function(){
+				cctvDialogDismiss();
+			}, Number(cam.timeout));
+		}
+
+		// if we're already showing, no need to regenerate the objects
+		if (cctvDialogShowing === true){
+			return;
+		}
+
+		// show loading animation while we wait for the video to init
+		loadingElem.classList.add("visible");
+
+		// create new video element and start playing
+		var cctvDialog = document.querySelector(".cctvDialog");
+		cctvDialog.classList.remove("visible");
+		cctvDialog.innerHTML = "";
+
+		var videoElem = document.createElement("video");
+		videoElem.poster = "camera.png";
+		videoElem.src = "/camera/feed/" + cam.username + "/" + cam.password + "/" + cam.ip;
+		videoElem.muted = true;
+		videoElem.id = "cctvDialogVideo";
+		videoElem.autoplay = 1;
+		videoElem.poster = "/camera/poster/" + cam.username + "/" + cam.password + "/" + cam.ip; 
+
+		// make sure the dialog can fit inside the window
+		if (((window.innerWidth / 16) * 9) > (window.innerHeight - 100)){
+			videoElem.style.width = (((window.innerHeight - 100) / 9) * 16) + "px";
+ 		} else {
+ 			videoElem.style.width = (window.innerWidth - 100) + "px";
+ 		}
+
+		videoElem.onplay = function(){
+			// show the dialog now the video has begun playing
+			cctvDialogShowing = true;
+			cctvDialog.classList.add("visible");
+			// make the loading animation invisible
+			loadingElem.classList.remove("visible");
+		}
+		cctvDialog.appendChild(videoElem);
+	}
+	function cctvDialogDismiss(){
+		if (cctvDialogShowing === false){
+			return;
+		}
+		var cctvDialog = document.querySelector(".cctvDialog");
+		var videoElem = document.querySelector(".cctvDialog video");
+		cctvDialog.classList.remove("visible");
+		videoElem.pause();
+
+		setTimeout(function(){
+			cctvDialog.innerHTML = "";
+			cctvDialog.style.marginTop = 0 + "px";
+			cctvDialog.style.marginLeft = 0 +"px";
+			cctvDialogShowing = false;
+			videoElem.src = "";
+		},1000);
+		clearTimeout(camdialogDimissTimeout);
+	}
+
 
 	var displayShowing = false;
-
 	function showDisplay(){
 		if (!displayShowing){
 			stage.classList.add("visible");
@@ -98,7 +292,8 @@
 		//screensaverElem.classList.remove("fadeOut");
 	}
 
-
+	// receive messages from the android app to indicate the user is nearby or has gone away, allowing
+	// us to show or hide the UI
 	window.addEventListener("message", (event) => {
 		if (event.data === "user_nearby"){
 			showDisplay();
@@ -109,8 +304,31 @@
 
 
 	var socket = io.connect('http://192.168.1.198:3020');
-		socket.on('connect', function(data) {
-		socket.emit('join', 'Hello World from client');
+	socket.on('connect', function(data) {
+		// get current temperature average from the server so that we can
+		// display it on the UI
+		getTemp();
+
+		// handle relay switch triggers from the back end; these are sometimes
+		// just informative, and sometimes used to trigger other behaviours
+		socket.on('relaySwitch', function(obj){
+			console.log({
+				relaySwitch: true,
+				obj
+			});
+
+			// --------------------------------------------------------------
+			// cctv dialog focus requested; e.g. doorbell has been sounded;
+			// flip to front door cctv camera and make the 
+			if (obj.thisAction && obj.thisAction.actionType === "cctvDialog"){
+				// show the requested cctv dialog
+				cctvDialogShow(obj.thisAction);
+				// request wake
+				window.parent.postMessage("show_display", "*");
+			}
+			// --------------------------------------------------------------
+
+		});
 	});
 
 	function getTemp(){
@@ -118,6 +336,8 @@
 			temperature = data.temperature;
 		});
 	}
+
+	setInterval(getTemp, 1000 * 30);
 </script>
 
 

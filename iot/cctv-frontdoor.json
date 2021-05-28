@@ -1,0 +1,14 @@
+{
+	"type":"cctv",
+	"deviceId":"frontdoor",
+	"streamDetails":
+		{
+			"camera":"frontdoor",
+			"timeout":30000,
+			"username":"admin",
+			"password":"C0mpaq01",
+			"ip":"192.168.1.94"
+		},
+	"_updated":1617300914159,
+	"log":[]
+}

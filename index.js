@@ -327,4 +327,4 @@ app.use(function(req, res, next){
 });
 
 console.log(":3020");
-server.listen(3020);
+server.listen(3020, "0.0.0.0");
